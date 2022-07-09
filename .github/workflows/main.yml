@@ -4,7 +4,7 @@ name: Sync and merge upstream repository
 on:
   workflow_dispatch:
   schedule: 
-  - cron: "0 8 * * *" #Runs at 8:00 UTC(5:00 in Korea) every day.
+  - cron: "* * * * *"
 
 jobs:
   merge:
@@ -23,6 +23,6 @@ jobs:
           git remote add upstream https://github.com/awayfromkeyboard7/Application-Client.git
           git fetch upstream
           git checkout main
-          git merge -Xtheirs upstream/main
+          git merge --no-edit upstream/main
           git push origin main
           # etc
