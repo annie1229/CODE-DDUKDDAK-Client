@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import * as Y from 'yjs';
 import { WebrtcProvider } from 'y-webrtc';
@@ -8,23 +9,17 @@ import {
   ReflexElement
 } from 'react-reflex';
 import { getCookie } from 'cookies-next';
-
 import { socket } from '../../lib/socket';
 import Layout from '../../components/layouts/main';
 import Editor from '../../components/code/editor';
 import Problem from '../../components/code/problem';
 import Player from '../../components/code/player';
 import Output from '../../components/code/output';
-import Popup from '../../components/popup';
+const Voice = dynamic(() => import('../../lib/peer'));
 import CheckValidUser from '../../components/checkValidUser';
 import CheckValidAccess from '../../components/checkValidAccess';
-
 import 'react-reflex/styles.css';
-import styles from '../../styles/pages/Code.module.scss';
-
-let awareness;
-let yLines;
-let undoManager;
+import styles from '../../styles/pages/code.module.scss';
 
 export default function Code() {
   const router = useRouter();  
@@ -36,44 +31,79 @@ export default function Code() {
   const [isSubmit, setIsSubmit] = useState(false);
   const [codeText, setCodeText] = useState("print('hello world')");
   const [codeTitle, setCodeTitle] = useState('solution.py');
-  const [codeResult, setCodeResult] = useState('');
-  const [isSuccessResult, setIsSuccessResult] = useState(true);
   const [isSelectOpen, setIsSelectOpen] = useState(false);
-  const [isPopup, setIsPopup] = useState(false);
-  const [popupTitle, setPopupTitle] = useState('');
-  const [popupContent, setPopupContent] = useState('');
-  const [popupLabel, setPopupLabel] = useState('');
-  const [popupBtnFunc, setPopupBtnFunc] = useState(() => () => setIsPopup(false));
   const [selectedLang, setSelectedLang] = useState('Python');
   // const [codemirrorExt, setCodemirrorExt] = useState([python()]);
-  const [countdown, setCountdown] = useState(900);
+  const [countdown, setCountdown] = useState(899);
   const [doc, setDoc] = useState();
   const [provider, setProvider] = useState();
   const [isDoc, setIsDoc] = useState(false);
+  const [isTimeout, setIsTimeout] = useState(false);
 
   let yDoc = new Y.Doc();
 
-  const updatePlayerList = (info) => {
-    let result = [...playerList];
-    console.log('player list >>', playerList);
-    for (let i = 0; i < info.length; i++) {
-      result[i] = info[i];
-    }
-    console.log('submit code socket result!!!', result);
-    setPlayerList(result);
-  };
-
   useEffect(() => {
-    socket.on('submitCode', (submitInfo) => {
-      console.log('submitInfo>>>>>>', submitInfo);
-      updatePlayerList(submitInfo);
+    socket.on('timeLimitCode', ts => {
+      setCountdown(parseInt(ts / 1000));
     });
-  }, [playerList]);
+
+    socket.on('timeOutCode', () => {
+      setCountdown(0);
+    });
+    
+    // park-hg start
+    socket.on('submitCode', (submitInfo) => {
+      setPlayerList(submitInfo);
+    });
+    socket.on('submitCodeTeam', (result) => {
+      console.log('submitCodeTeam!!!!!!!!!!!!!>>>>>>>>>>', result);
+      // PLEASE update player list here!!!!!!!!
+      setPlayerList([result[0][0], result[1][0]]);
+    });
+    socket.on('teamGameOver', () => {
+      console.log('teamGameOver');
+      router.push({
+        pathname: '/code/result',
+        query: { 
+          gameLogId: router?.query?.gameLogId,
+          mode: router?.query?.mode 
+        }
+      });
+    });
+    socket.on('shareJudgedCode', (data) => {
+      console.log('shareJudgedCode', data)
+      setOutputs(data);
+    });
+    // park-hg end
+  }, []);
 
   useEffect(() => {
-    const submitResult = async () => {
-      await submitCode();
-      socket.emit('submitCode', router?.query?.gameLogId);
+    // if (router.isReady) {
+    //   socket.on('timeOutCode', () => {
+    //     if(router?.query?.mode === 'team') {
+    //       if(router?.query?.roomId === getCookie('uname')) {
+    //         goToResult();
+    //       }
+    //     } else {
+    //       goToResult();
+    //     }
+    //   });
+    // }
+  }, [router.isReady]);
+
+  useEffect(() => {
+    const submitResult = async() => {
+      //도현 분기처리 추가
+      console.log("what mode submit code at????????", router?.query?.roomId);
+      if (router?.query?.mode === "team"){
+        await submitCodeTeam();
+        socket.emit('submitCodeTeam', router?.query?.gameLogId, router?.query?.roomId);
+      }
+      else {
+        console.log("team should not be here!!!!!!!!!!!!");
+        await submitCode();
+        socket.emit('submitCode', router?.query?.gameLogId);
+      };
       router.push({
         pathname: '/code/result',
         query: { 
@@ -84,88 +114,71 @@ export default function Code() {
     };
 
     if(isSubmit) {
+      console.log('team mode submit???????');
       submitResult();
       setIsSubmit(false);
     }
   }, [isSubmit]);
 
   useEffect(() => {
-    const date = new Date('2022-07-05T13:00:00');
+    if(router.isReady) {
+      const getProblem = async() => {
+        await fetch(`/gamelog/getGameLog`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            gameLogId: router?.query?.gameLogId,
+            mode: router?.query?.mode
+          }),
+        })
+        .then(res => res.json())
+        .then(data => {
+          if(data.success) {
+            setProblems(data.info.problemId);
+            setPlayerList(data.info.userHistory);
+          }
+        })
+        .catch(error => console.log('error >> ', error));
+      };
 
-    const interval = setInterval(() => {
-      console.log(new Date());
-      setCountdown(prev => {
-        if(0 < prev) return prev - 1;
-        else return prev;
-      });
-    }, 1000);
+      if(router?.query?.gameLogId && router.query.gameLogId !== '') {
+        getProblem();
+      }
 
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
+      if(isDoc === false && router?.query?.gameLogId) {
+        const url = router?.query?.mode === 'team' ? `${router?.query?.roomId}_${router?.query?.gameLogId}` : `${gitId}_${router?.query?.gameLogId}`
+        let yProvider = new WebrtcProvider(url, yDoc);
+        setDoc(yDoc);
+        setProvider(yProvider);
+        setIsDoc(true);
 
-  useEffect(() => {
-    const getProblem = async() => {
-      await fetch(`/api/gamelog/getGameLog`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          gameLogId: router?.query?.gameLogId,
-          mode: router?.query?.mode
-        }),
-      })
-      .then(res => res.json())
-      .then(data => {
-        console.log('success get problem!!', data);
-        if(data.success) {
-          setProblems(data.info.problemId);
-          setPlayerList(data.info.userHistory);
+        return () => {
+          yProvider.destroy();
         }
-      })
-      .catch(error => console.log('error >> ', error));
-    };
-
-    if(router?.query?.gameLogId && router.query.gameLogId !== '') {
-      getProblem();
-    }
-
-    if(isDoc === false && router?.query?.gameLogId) {
-      const url = router?.query?.mode === 'team' ? router?.query?.gameLogId : `${gitId}_${router?.query?.gameLogId}`
-      let yProvider = new WebrtcProvider(url, yDoc);
-      awareness = yProvider.awareness;
-      setDoc(yDoc);
-      setProvider(yProvider);
-      setIsDoc(true);
-
-      return () => {
-        yProvider.destroy();
       }
     }
   }, [router]);
 
   useEffect(() => {
-    if(countdown === 0) {
-      judgeCode();
-      setIsPopup(true);
+    const timeOutJudge = async() => {
+      await judgeCode(true);
     }
-  }, [countdown]);
 
-  useEffect(() => {
-    if(passRate === 100) {
-      setPopupTitle('정답입니다!🥳');
-      setPopupContent(`문제를 맞추셨습니다.`);
-      setPopupLabel('다음 문제로');
-      setPopupBtnFunc(() => () => goToNextProblem());
-    } else {
-      setPopupTitle('아쉽지만 다음 기회에..😭');
-      setPopupContent(`문제를 틀렸습니다.`);
-      setPopupLabel('메인으로');
-      setPopupBtnFunc(() => () => goToLobby());
+    if(countdown === 0 && isTimeout === false) {
+      if(router.isReady) {
+        if(router?.query?.mode === 'team') {
+          if(router?.query?.roomId === getCookie('uname')) {
+            timeOutJudge();
+          }
+        } else {
+          timeOutJudge();
+        }
+      }
+      setIsTimeout(true);
     }
-  }, [isSuccessResult, selectedLang]);
+  }, [countdown, router.isReady]);
   
   useEffect(() => {
     onChangeLang(selectedLang);
@@ -178,11 +191,6 @@ export default function Code() {
     
     return `${min.substr(-2)}분 ${sec.substr(-2)}초`;
   };
-
-  const onChange = useCallback((value) => {
-    console.log(value);
-    setCodeText(value);
-  }, []);
 
   const onChangeLang = (lang) => {
     switch(lang) {
@@ -204,13 +212,6 @@ export default function Code() {
     }
   };
 
-  const goToNextProblem = () => {
-    onChangeLang(selectedLang);
-    setOutputs({});
-    setCodeResult('');
-    setIsPopup(false);
-  };
-
   const goToLobby = () => {
     router.push('/');
   };
@@ -220,10 +221,9 @@ export default function Code() {
   };
 
   const submitCode = async() => {
-    const code = doc.getText('codemirror');
-    console.log('submit code >> ', code);
+    const code = doc?.getText('codemirror');
 
-    await fetch(`/api/gamelog/update`, {
+    await fetch(`/gamelog/update`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -242,50 +242,61 @@ export default function Code() {
     .catch(error => console.log('error >> ', error));
   };
 
-  const judgeCode = async(submit=false) => {
-    const code = doc.getText('codemirror');
-    console.log('judge code >> ', code);
+  //도현 추가
+  const submitCodeTeam = async() => {
+    const code = doc?.getText('codemirror');
 
-    await fetch(`/api/judge`, {
+    await fetch(`/gamelog/updateTeam`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ 
-        code,
+        submitAt: new Date(),
+        gameId: router.query.gameLogId,
         gitId,
-        problemId: problems._id,
+        code,
+        language: selectedLang,
+        ranking: 0,
+        passRate,
+        moderater: router?.query?.roomId
+      }),
+    })
+    .then(res => console.log('submit code team!! ', res))
+    .catch(error => console.log('error >> ', error));
+  }
+
+  const judgeCode = async(submit=false) => {
+    const code = doc?.getText('codemirror');
+    console.log("timeout judgeCode????", code, 'problemId', problems._id, 'lang', selectedLang);
+    await fetch(`/judge`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        code: code ?? '',
+        gitId,
+        problemId: problems?._id ?? '',
         language: selectedLang
       }),
     })
     .then(res => res.json())
     .then(data => {
-      if (data.result) setIsSuccessResult(true);
-      else setIsSuccessResult(false);
+
       setOutputs(data);
+      // park-hg start
+      // 팀원 중 한명이 제출하면 다같이 결과를 공유
+      if (router?.query?.mode === 'team') {
+        socket.emit("shareJudgedCode", data, router?.query?.roomId);
+      }
       console.log('judgeCode >>>>>>', data);
+      // park-hg end
+
       setPassRate(data.passRate);
       if(submit === true) {
         setIsSubmit(true);
       }
-    })
-    .catch(error => console.log('error >> ', error));
-  };
-
-  const judgeCodeWithSocket = async() => {
-    await fetch(`/api/judge`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        code: codeText 
-      }),
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.result) setIsSuccessResult(true);
-      else setIsSuccessResult(false);
     })
     .catch(error => console.log('error >> ', error));
   };
@@ -351,7 +362,8 @@ export default function Code() {
         <div className={styles.footer}>
           {
             router?.query?.mode === 'team'
-            ? <div className={styles.voiceBtn}>팀 보이스</div>
+            // ? <div className={styles.voiceBtn}>팀 보이스</div>
+            ? <Voice />
             : <div />
           }
           <div className={styles.footerRight}>
@@ -365,15 +377,6 @@ export default function Code() {
           <div className={styles.selectElem} onClick={() => setSelectedLang('Python')}>Python</div>
           <div className={styles.selectElem} onClick={() => setSelectedLang('JavaScript')}>JavaScript</div>
         </div>
-        {
-          isPopup
-          && <Popup 
-              title={popupTitle}
-              content={popupContent}
-              label={popupLabel}
-              onClick={popupBtnFunc} 
-            />
-        }
         <CheckValidUser />
         {/* <CheckValidAccess check={router.query.gameLogId} message="유효하지 않은 게임입니다." /> */}
         </>

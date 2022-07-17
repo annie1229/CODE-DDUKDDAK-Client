@@ -9,7 +9,7 @@ import Sidebar from '../../../components/sidebar';
 import CheckValidUser from '../../../components/checkValidUser';
 
 export default function WaitPage() {
-  const router = useRouter();  
+  const router = useRouter();
   const defaultUsers = [
     {
       id: 1,
@@ -62,56 +62,85 @@ export default function WaitPage() {
   ];
   const [gameLogId, setGameLogId] = useState('');
   const [players, setPlayers] = useState(defaultUsers);
-
-  // useEffect(() => {
-  //   // router.beforePopState(() => {
-  //   //   alert('exit before leaving!!!!!');
-  //   //   socket.emit('exitWait', getCookie('uname'));
-  //   // })
-  //   const handler = () => {
-  //     alert('exit before leaving!!!!!');
-  //     socket.emit('exitWait', getCookie('uname'));
-  //     throw 'route change abort!!!';
-  //   };
-  //   router.events.on('routeChangeStart', handler);
-
-  //   return () => {
-  //     router.events.off('routeChangeStart', handler);
-  //   }
-  // }, [router]);
+  const [countdown, setCountdown] = useState(179);
+  const [isMatching, setIsMatching] = useState(false);
 
   useEffect(() => {
-    // const exitWait = (e) => {
-    //   e.preventDefault();
-    //   // window.alert('exit page???');
-    //   // alert('exit page???');
-    //   // console.log('exit wait function!!!!!', getCookie('uname'));
-    //   // socket.emit('exitWait', getCookie('uname'));
-    //   e.returnValue = '';
-    // };
-
-    // window.addEventListener('beforeunload', exitWait);
-    socket.on('enterNewUser', (users) => {
-      addPlayer(users);
+    socket.on('timeLimit', ts => {
+      setCountdown(parseInt(ts / 1000));
     });
-    socket.on('startGame', (gameLogId) => {
-      setGameLogId(gameLogId);
-    });
-    socket.emit('waitGame', { gitId: getCookie('uname'), avatarUrl: getCookie('uimg') });
+    console.log(router?.query?.mode);
+    if (router.isReady) {
+      if (router?.query?.mode === 'team'){
+        if (router?.query?.roomId === getCookie('uname')) {
+          socket.emit('createTeam', { gitId: getCookie('uname'), avatarUrl: getCookie('uimg') });
+        }
+        socket.on('timeOut', () => {
+          if(players[0]?.gitId === getCookie('uname') && !isMatching) {
+            goToMatch();
+          }
+        });
+        socket.on('enterNewUserToTeam', (users) => {
+          addPlayer(users);
+        });
+        socket.on('setUsers', (users) => {
+          addPlayer(users);
+        });
 
-    return () => {
-      console.log('exit wait screen!!!!!', getCookie('uname'));
-      // window.removeEventListener('beforeunload', exitWait);
-      // socket.emit('exitWait', getCookie('uname'));
-      // changeSocketConnection(process.env.NEXT_PUBLIC_SOCKET_PROVIDER);
+        // 팀전 대기 중 화면으로 이동
+        socket.once("goToMachingRoom", (bangjang) => {
+          setIsMatching(true);
+          router.push({
+            pathname: '/code/match',
+            query: { mode: 'team', roomId: bangjang }
+          })
+        });
+        
+        socket.on('enterNewUserToTeam', (users) => {
+          addPlayer(users);
+        });
+        socket.on('setUsers', (users) => {
+          addPlayer(users);
+        });
+  
+        // 팀전 대기 중 화면으로 이동
+        socket.on("goToMachingRoom", (bangjang) => {
+          router.push({
+            pathname: '/code/match',
+            query: { mode: 'team', roomId: bangjang }
+          });
+        })
+        socket.emit('getUsers', router?.query?.roomId);
+      } 
+      else {
+        socket.on('timeOut', () => {
+          if(players[0]?.gitId === getCookie('uname')) {
+            goToCode();
+          }
+        });
+        socket.on('enterNewUser', (users) => {
+          addPlayer(users);
+        });
+        socket.on('startGame', (gameLogId) => {
+          setGameLogId(gameLogId);
+        });
+        socket.emit('waitGame', { gitId: getCookie('uname'), avatarUrl: getCookie('uimg') });
+      }
     }
-  }, []);
+  }, [router.isReady]);
 
 
   useEffect(() => {
-    socket.on('exitWait', (users) => {
-      addPlayer(users);
-    });
+    if (router?.query?.mode === 'team') {
+      socket.on('exitTeamGame', () => {
+        router.push('/');
+      });
+    } 
+    else {
+      socket.on('exitWait', (users) => {
+        addPlayer(users);
+      });
+    }
   }, [players]);
 
   useEffect(() => {
@@ -131,15 +160,14 @@ export default function WaitPage() {
       }
     };
 
-    console.log('send players', sendPlayers);
-
-    await fetch(`/api/gamelog/createNew`, {
+    await fetch(`/gamelog/createNew`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ 
-        players: sendPlayers
+        players: sendPlayers,
+        totalUsers: sendPlayers.length
       }),
     })
     .then(res => res.json())
@@ -156,9 +184,19 @@ export default function WaitPage() {
     await startGame();
   };
 
+  const goToMatch = () => {
+    console.log('matching players.........',getCookie('uname'), players );
+    socket.emit('goToMachingRoom', getCookie('uname'));
+  };
+
   const goToLobby = () => {
-    socket.emit('exitWait', getCookie('uname'));
-    router.push('/');
+    if (router?.query?.mode === 'team') {
+      socket.emit('exitTeamGame', router?.query?.roomId, getCookie('uname'));
+    } 
+    else {
+      socket.emit('exitWait', getCookie('uname'));
+      router.push('/');
+  }
   };
 
   const goToMyPage = () => {
@@ -167,15 +205,13 @@ export default function WaitPage() {
 
   const addPlayer = (users) => {
     let copyPlayers = [...defaultUsers];
-    console.log('add player>>>>>>>', users);
-    for(let i = 0; i < users.length; i++) {
-      if(copyPlayers[i].isPlayer === false) {
-        copyPlayers[i].gitId = users[i].gitId;
-        copyPlayers[i].avatarUrl = users[i].avatarUrl ?? '/jinny.jpg';
-        copyPlayers[i].isPlayer = true;
-      }
+    
+    for(let i = 0; i < users?.length; i++) {
+      copyPlayers[i].gitId = users[i].gitId;
+      copyPlayers[i].avatarUrl = users[i].avatarUrl ?? '/jinny.jpg';
+      copyPlayers[i].isPlayer = true;
     }
-    console.log('addplayer', copyPlayers);
+    
     setPlayers(copyPlayers);
   }
 
@@ -187,8 +223,9 @@ export default function WaitPage() {
           <Wait 
             type={router?.query?.mode} 
             players={players} 
+            countdown={countdown}
             onClickGoToMain={goToLobby} 
-            onClickPlayAgain={goToCode}
+            onClickPlayAgain={router?.query?.mode === 'team' ? goToMatch : goToCode}
           />
           <Sidebar />
           <CheckValidUser />
