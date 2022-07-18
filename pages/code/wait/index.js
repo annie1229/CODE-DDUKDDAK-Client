@@ -160,7 +160,7 @@ export default function WaitPage() {
       }
     };
 
-    await fetch(`/gamelog/createNew`, {
+    await fetch(`server/api/gamelog/createNew`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
