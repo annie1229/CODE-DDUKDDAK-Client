@@ -7,7 +7,6 @@ import Header from '../../../components/header';
 import Result from '../../../components/result/soloBox';
 import Sidebar from '../../../components/sidebar';
 import Loading from '../../../components/loading';
-import CheckValidUser from '../../../components/checkValidUser';
 
 export default function ResultPage() {
   const router = useRouter();  
@@ -69,7 +68,6 @@ export default function ResultPage() {
             onClickPlayAgain={goToWait}
           />
           <Sidebar />
-          {/* <CheckValidUser /> */}
         </>
       }
     />

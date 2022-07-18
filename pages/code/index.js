@@ -18,7 +18,6 @@ import Player from '../../components/code/player';
 import Output from '../../components/code/output';
 const Voice = dynamic(() => import('../../lib/peer'));
 import Loading from '../../components/loading';
-import CheckValidUser from '../../components/checkValidUser';
 import CheckValidAccess from '../../components/checkValidAccess';
 import 'react-reflex/styles.css';
 import styles from '../../styles/pages/code.module.scss';
@@ -60,7 +59,6 @@ export default function Code() {
     });
     socket.on('submitCodeTeam', (result) => {
       console.log('submitCodeTeam!!!!!!!!!!!!!>>>>>>>>>>', result);
-      // PLEASE update player list here!!!!!!!!
       setPlayerList([result[0][0], result[1][0]]);
     });
     socket.on('teamGameOver', () => {
@@ -359,7 +357,6 @@ export default function Code() {
             <div className={styles.footer}>
               {
                 router?.query?.mode === 'team'
-                // ? <div className={styles.voiceBtn}>팀 보이스</div>
                 ? <Voice />
                 : <div />
               }
@@ -374,7 +371,6 @@ export default function Code() {
             <div className={styles.selectElem} onClick={() => setSelectedLang('Python')}>Python</div>
             <div className={styles.selectElem} onClick={() => setSelectedLang('JavaScript')}>JavaScript</div>
           </div>
-          {/* <CheckValidUser /> */}
           {/* <CheckValidAccess check={router.query.gameLogId} message="유효하지 않은 게임입니다." /> */}
         </>
       }

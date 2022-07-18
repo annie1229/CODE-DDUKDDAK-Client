@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useSession, signIn } from 'next-auth/react';
+import { useSession, signIn, signOut } from 'next-auth/react';
 import Image from 'next/image'
 import Loading from './loading';
 import styles from '../styles/components/header.module.scss';
@@ -35,9 +35,16 @@ export default function Header({ label, onClickBtn }) {
     .then(data => {
       if(data.success) {
         setIsValidUser(true);
+      } else {
+        signOut();
+        setIsValidUser(false);
       }
     })
-    .catch(error => console.log('error >> ', error));
+    .catch(error => {
+      console.log('error >> ', error);
+      signOut();
+      setIsValidUser(false);
+    });
   };
 
   return (

@@ -8,7 +8,6 @@ import Header from '../../../components/header';
 import Wait from '../../../components/wait/box';
 import Sidebar from '../../../components/sidebar';
 import Loading from '../../../components/loading';
-import CheckValidUser from '../../../components/checkValidUser';
 
 export default function WaitPage() {
   const router = useRouter();
@@ -238,7 +237,6 @@ export default function WaitPage() {
             onClickPlayAgain={router?.query?.mode === 'team' ? goToMatch : goToCode}
           />
           <Sidebar />
-          {/* <CheckValidUser /> */}
         </>
       }
     />

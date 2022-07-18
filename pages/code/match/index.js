@@ -8,7 +8,6 @@ import Header from '../../../components/header';
 import Match from '../../../components/match/box';
 import Sidebar from '../../../components/sidebar';
 import Loading from '../../../components/loading';
-import CheckValidUser from '../../../components/checkValidUser';
 
 export default function MatchPage() {
   const router = useRouter();  
@@ -114,7 +113,6 @@ export default function MatchPage() {
             onClickPlayAgain={goToCode}
           />
           <Sidebar />
-          {/* <CheckValidUser /> */}
         </>
       }
     />

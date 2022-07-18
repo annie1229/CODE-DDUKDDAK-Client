@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useSession, signIn, signOut } from 'next-auth/react';
-import { 
-  getCookie, 
-  hasCookie
-} from 'cookies-next';
+import { useSession } from 'next-auth/react';
+import { getCookie } from 'cookies-next';
 import { socket } from '../lib/socket';
 import Layout from '../components/layouts/main';
 import Header from '../components/header';
@@ -15,7 +12,7 @@ import Notification from '../components/notification';
 
 export default function Home() {
   const router = useRouter();  
-  const { data, status } = useSession();
+  const { status } = useSession();
   const [isLogin, setIsLogin] = useState(false);
   const [isPopup, setIsPopup] = useState(false);
   const [isNoti, setIsNoti] = useState(false);
