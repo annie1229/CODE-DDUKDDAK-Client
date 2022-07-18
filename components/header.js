@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useSession, signIn, signOut } from "next-auth/react"
 import Image from 'next/image'
-import { deleteCookie } from 'cookies-next';
+import { setCookie, deleteCookie } from 'cookies-next';
 import styles from '../styles/components/header.module.scss';
 
 export default function Header({ label, onClickBtn, isSignout=false }) {
@@ -12,6 +12,9 @@ export default function Header({ label, onClickBtn, isSignout=false }) {
   useEffect(() => {
     console.log('change login status?????????', data, status);
     if(status === "authenticated") {
+      setCookie('uid', data.accessToken);
+      setCookie('uname', data.user.name);
+      setCookie('uimg', data.user.image);
       sendAccessToken(data.accessToken);
     }
   }, [status])
