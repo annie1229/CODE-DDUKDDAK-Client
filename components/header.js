@@ -7,7 +7,7 @@ import styles from '../styles/components/header.module.scss';
 
 export default function Header({ label, onClickBtn }) {
   const router = useRouter();
-  const { session } = useSession();
+  const { data, status } = useSession();
   const [isLogin, setIsLogin] = useState(false);
 
   useEffect(() => {
@@ -17,6 +17,10 @@ export default function Header({ label, onClickBtn }) {
       setIsLogin(false);
     }
   }, [isLogin]);
+
+  useEffect(() => {
+    console.log('change login status?????????', data, status);
+  }, [data, status])
 
   const goToLobby = () => {
     router.push('/');
@@ -51,16 +55,16 @@ export default function Header({ label, onClickBtn }) {
           </div>
       } */}
       {
-        session
+        status === "authenticated"
         ?
             <>
               Signed in as {session.user.email} <br />
-              <button onClick={() => signOut()}>Sign out</button>
+              <button onClick={signOut}>Sign out</button>
             </>
         :
           <>
             Not signed in <br />
-            <button onClick={() => signIn()}>Sign in</button>
+            <button onClick={signIn}>Sign in</button>
           </>
       }
       </div>
