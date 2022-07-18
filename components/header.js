@@ -12,9 +12,6 @@ export default function Header({ label, onClickBtn, isSignout=false }) {
   useEffect(() => {
     console.log('change login status?????????', data, status);
     if(status === "authenticated") {
-      setCookie('uid', data.accessToken);
-      setCookie('uname', data.user.name);
-      setCookie('uimg', data.user.image);
       sendAccessToken(data.accessToken);
     }
   }, [status])
