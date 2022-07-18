@@ -21,7 +21,7 @@ export default function Header({ label, onClickBtn, isSignout=false }) {
   };
 
   const sendAccessToken = async(accessToken) => {
-    await fetch(`/user/get-info`, {
+    await fetch(`/server/api/user/get-info`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
