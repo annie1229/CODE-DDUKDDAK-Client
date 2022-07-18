@@ -932,7 +932,7 @@ export default function MyPage() {
           <div className={styles.mainCol}>
             <div className={styles.profileBox}>
               <div className={styles.profileIcon}>
-                <Image src={getCookie('uimg')} width={100} height={100} className={styles.profileIcon} alt="프로필이미지" />
+                <Image src={getCookie('uimg') ?? '/default_profile.jpg'} width={100} height={100} className={styles.profileIcon} alt="프로필이미지" />
               </div>
               <div className={styles.nickname}>{getCookie('uname')}</div>
             </div>
