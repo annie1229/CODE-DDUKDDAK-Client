@@ -9,6 +9,10 @@ export default NextAuth({
     }),
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      console.log('redirect callback >>>>> ', url, baseUrl);
+      return baseUrl
+    },
     async jwt({ token, account }) {
       // Persist the OAuth access_token to the token right after signin
       console.log('[api/auth] jwt callback', token, account);
