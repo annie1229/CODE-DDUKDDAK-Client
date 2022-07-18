@@ -26,7 +26,8 @@ export default function Header({ label, onClickBtn }) {
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'include'  
+      mode: 'cors',
+      credentials: 'include' 
     })
     .then(res => res.json())
     .then(data => router.push(data.url))
