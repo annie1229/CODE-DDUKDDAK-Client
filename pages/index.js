@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useSession, signIn, signOut } from "next-auth/react"
 import { 
   getCookie, 
   hasCookie
@@ -14,6 +15,7 @@ import Notification from '../components/notification';
 
 export default function Home() {
   const router = useRouter();  
+  const { data, status } = useSession();
   const [isLogin, setIsLogin] = useState(false);
   const [isPopup, setIsPopup] = useState(false);
   const [isNoti, setIsNoti] = useState(false);
@@ -49,7 +51,7 @@ export default function Home() {
       // token이 없으면 false
       setIsLogin(false);
     }
-  }, [isLogin]);
+  }, [isLogin, status]);
 
   const goToWait = (mode) => {
     const query = mode === 'team' ? { mode, roomId: getCookie('uname') } : { mode }
