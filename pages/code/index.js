@@ -17,6 +17,7 @@ import Problem from '../../components/code/problem';
 import Player from '../../components/code/player';
 import Output from '../../components/code/output';
 const Voice = dynamic(() => import('../../lib/peer'));
+import Loading from '../../components/loading';
 import CheckValidUser from '../../components/checkValidUser';
 import CheckValidAccess from '../../components/checkValidAccess';
 import 'react-reflex/styles.css';
@@ -309,70 +310,72 @@ export default function Code() {
         </div>
       </>
       }
-      body={<>
-      <ReflexContainer>
-        <ReflexElement className={styles.body} flex={1}>
-          <ReflexContainer orientation='vertical'>
-            <ReflexElement className={styles.bodyCol}>
-              <ReflexContainer orientation='horizontal'>
-                <ReflexElement flex={0.7} style={{ overflow: 'hidden' }}>
-                  { problems && <Problem problems={problems}/>}
+      body={
+        <>
+          { status !== 'authenticated' && <Loading /> }
+          <ReflexContainer>
+            <ReflexElement className={styles.body} flex={1}>
+              <ReflexContainer orientation='vertical'>
+                <ReflexElement className={styles.bodyCol}>
+                  <ReflexContainer orientation='horizontal'>
+                    <ReflexElement flex={0.7} style={{ overflow: 'hidden' }}>
+                      { problems && <Problem problems={problems}/>}
+                    </ReflexElement>
+                    <ReflexSplitter style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)', height: '0.625rem', borderTop: '1px solid rgba(0,0,0,0.5)', borderBottom: '0' }} />
+                    <ReflexElement minSize={40} style={{ overflow: 'hidden' }}>
+                      <div className={styles.resultTitle}>플레이어</div>
+                      <Player players={playerList} />
+                    </ReflexElement>
+                  </ReflexContainer>
                 </ReflexElement>
-                <ReflexSplitter style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)', height: '0.625rem', borderTop: '1px solid rgba(0,0,0,0.5)', borderBottom: '0' }} />
-                <ReflexElement minSize={40} style={{ overflow: 'hidden' }}>
-                  <div className={styles.resultTitle}>플레이어</div>
-                  <Player players={playerList} />
+                <ReflexSplitter style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)', width: '0.625rem', borderLeft: '0', borderRight: '1px solid rgba(0,0,0,0.5)' }} />
+                <ReflexElement className={styles.bodyCol} flex={0.65}>
+                  <ReflexContainer orientation='horizontal'>
+                    <ReflexElement flex={0.7} minSize={40} style={{ overflow: 'hidden' }}>
+                      <div className={styles.codeHeader}>
+                        <div className={styles.codeTitle}>{codeTitle}</div>
+                        <div className={styles.toggleBtn} onClick={() => setIsSelectOpen(prev => !prev)}>
+                          {selectedLang}
+                        </div>
+                      </div>
+                      <div className={styles.codeArea}>
+                        <Editor 
+                          doc={doc} 
+                          provider={provider} 
+                          gitId={gitId} 
+                          selectedLang={selectedLang}
+                        />
+                      </div>
+                    </ReflexElement>
+                    <ReflexSplitter style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)', height: '0.625rem', borderTop: '1px solid rgba(0,0,0,0.5)', borderBottom: '0' }} />
+                    <ReflexElement minSize={40} style={{ overflow: 'hidden' }}>
+                      <div className={styles.resultTitle}>실행 결과</div>
+                      <Output outputs={outputs}/>
+                    </ReflexElement>
+                  </ReflexContainer>
                 </ReflexElement>
               </ReflexContainer>
             </ReflexElement>
-            <ReflexSplitter style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)', width: '0.625rem', borderLeft: '0', borderRight: '1px solid rgba(0,0,0,0.5)' }} />
-            <ReflexElement className={styles.bodyCol} flex={0.65}>
-              <ReflexContainer orientation='horizontal'>
-                <ReflexElement flex={0.7} minSize={40} style={{ overflow: 'hidden' }}>
-                  <div className={styles.codeHeader}>
-                    <div className={styles.codeTitle}>{codeTitle}</div>
-                    <div className={styles.toggleBtn} onClick={() => setIsSelectOpen(prev => !prev)}>
-                      {selectedLang}
-                    </div>
-                  </div>
-                  <div className={styles.codeArea}>
-                    <Editor 
-                      doc={doc} 
-                      provider={provider} 
-                      gitId={gitId} 
-                      selectedLang={selectedLang}
-                    />
-                  </div>
-                </ReflexElement>
-                <ReflexSplitter style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)', height: '0.625rem', borderTop: '1px solid rgba(0,0,0,0.5)', borderBottom: '0' }} />
-                <ReflexElement minSize={40} style={{ overflow: 'hidden' }}>
-                  <div className={styles.resultTitle}>실행 결과</div>
-                  <Output outputs={outputs}/>
-                </ReflexElement>
-              </ReflexContainer>
-            </ReflexElement>
+            <div className={styles.footer}>
+              {
+                router?.query?.mode === 'team'
+                // ? <div className={styles.voiceBtn}>팀 보이스</div>
+                ? <Voice />
+                : <div />
+              }
+              <div className={styles.footerRight}>
+                <div className={styles.btn} onClick={judgeCode}>코드 실행</div>
+                <div className={`${styles.btn} ${styles.btnSubmit}`} onClick={goToResult}>코드 제출</div>
+              </div>
+            </div>
           </ReflexContainer>
-        </ReflexElement>
-        <div className={styles.footer}>
-          {
-            router?.query?.mode === 'team'
-            // ? <div className={styles.voiceBtn}>팀 보이스</div>
-            ? <Voice />
-            : <div />
-          }
-          <div className={styles.footerRight}>
-            <div className={styles.btn} onClick={judgeCode}>코드 실행</div>
-            <div className={`${styles.btn} ${styles.btnSubmit}`} onClick={goToResult}>코드 제출</div>
+          <div className={isSelectOpen ? styles.selectList : styles.hidden}>
+            <div className={styles.selectElem} onClick={() => setSelectedLang('C++')}>C++</div>
+            <div className={styles.selectElem} onClick={() => setSelectedLang('Python')}>Python</div>
+            <div className={styles.selectElem} onClick={() => setSelectedLang('JavaScript')}>JavaScript</div>
           </div>
-        </div>
-        </ReflexContainer>
-        <div className={isSelectOpen ? styles.selectList : styles.hidden}>
-          <div className={styles.selectElem} onClick={() => setSelectedLang('C++')}>C++</div>
-          <div className={styles.selectElem} onClick={() => setSelectedLang('Python')}>Python</div>
-          <div className={styles.selectElem} onClick={() => setSelectedLang('JavaScript')}>JavaScript</div>
-        </div>
-        {/* <CheckValidUser /> */}
-        {/* <CheckValidAccess check={router.query.gameLogId} message="유효하지 않은 게임입니다." /> */}
+          {/* <CheckValidUser /> */}
+          {/* <CheckValidAccess check={router.query.gameLogId} message="유효하지 않은 게임입니다." /> */}
         </>
       }
     />

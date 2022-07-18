@@ -95,31 +95,31 @@ export default function Home() {
     <Layout 
       header={<Header label="마이페이지" onClickBtn={goToMyPage} />}
       body={
-      <>
-        <LobbyBox mode="personal" onClick={() => goToWait('personal')}/>
-        <LobbyBox mode="team" onClick={() => goToWait('team')}/>
-        { isLogin && <Sidebar />}
-        {
-          isPopup
-          && <Popup 
-              title="⛔️로그인이 필요합니다.⛔️"
-              content="게임에 참가하시려면 로그인이 필요합니다."
-              label="메인으로"
-              onClick={() => setIsPopup(false)} 
-            />
-        } 
-        {
-          isLogin 
-          && isNoti
-          && <Notification 
-              title={`${inviteId}님이 팀전에 초대했습니다!`}
-              content="게임에 참가하시겠습니까?"
-              imgUrl={inviteImageUrl ?? "/default_profile.jpg"}
-              onClickAccept={onClickAccept}
-              onClickDecline={onClickDecline}
-            />
-        }
-      </>
+        <>
+          <LobbyBox mode="personal" onClick={() => goToWait('personal')}/>
+          <LobbyBox mode="team" onClick={() => goToWait('team')}/>
+          { isLogin && <Sidebar />}
+          {
+            isPopup
+            && <Popup 
+                title="⛔️로그인이 필요합니다.⛔️"
+                content="게임에 참가하시려면 로그인이 필요합니다."
+                label="메인으로"
+                onClick={() => setIsPopup(false)} 
+              />
+          } 
+          {
+            isLogin 
+            && isNoti
+            && <Notification 
+                title={`${inviteId}님이 팀전에 초대했습니다!`}
+                content="게임에 참가하시겠습니까?"
+                imgUrl={inviteImageUrl ?? "/default_profile.jpg"}
+                onClickAccept={onClickAccept}
+                onClickDecline={onClickDecline}
+              />
+          }
+        </>
       }
     />
   )

@@ -7,6 +7,7 @@ import Layout from '../../../components/layouts/main';
 import Header from '../../../components/header';
 import Match from '../../../components/match/box';
 import Sidebar from '../../../components/sidebar';
+import Loading from '../../../components/loading';
 import CheckValidUser from '../../../components/checkValidUser';
 
 export default function MatchPage() {
@@ -105,6 +106,7 @@ export default function MatchPage() {
       header={<Header label="마이페이지" onClickBtn={goToMyPage} />}
       body={
         <>
+          { status !== 'authenticated' && <Loading /> }
           <Match 
             type={router?.query?.mode} 
             players={players} 

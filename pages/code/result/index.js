@@ -6,6 +6,7 @@ import Layout from '../../../components/layouts/main';
 import Header from '../../../components/header';
 import Result from '../../../components/result/soloBox';
 import Sidebar from '../../../components/sidebar';
+import Loading from '../../../components/loading';
 import CheckValidUser from '../../../components/checkValidUser';
 
 export default function ResultPage() {
@@ -59,6 +60,7 @@ export default function ResultPage() {
       header={<Header label="마이페이지" onClickBtn={goToMyPage} />}
       body={
         <>
+          { status !== 'authenticated' && <Loading /> }
           <Result 
             type={router?.query?.mode}
             ranks={ranks} 
