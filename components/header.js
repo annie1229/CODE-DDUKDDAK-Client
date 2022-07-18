@@ -55,10 +55,11 @@ export default function Header({ label, onClickBtn }) {
           </div>
       } */}
       {
-        status === "authenticated"
+        // status === "authenticated"
+        data
         ?
             <>
-              Signed in as {session.user.email} <br />
+              Signed in as {data.user.email} <br />
               <button onClick={signOut}>Sign out</button>
             </>
         :
