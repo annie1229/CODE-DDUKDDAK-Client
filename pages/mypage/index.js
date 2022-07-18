@@ -1,9 +1,8 @@
+import { useEffect } from 'react';
 import Image from 'next/image'
 import { useRouter } from 'next/router';
-import { 
-  getCookie, 
-  deleteCookie 
-} from 'cookies-next';
+import { useSession, signOut } from 'next-auth/react';
+import { getCookie, deleteCookie } from 'cookies-next';
 import Layout from '../../components/layouts/main';
 import Header from '../../components/header';
 import Rank from '../../components/rank/item';
@@ -12,6 +11,7 @@ import styles from '../../styles/pages/mypage.module.scss'
 
 export default function MyPage() {
   const router = useRouter();
+  const { status } = useSession();
 
   const ranks = [
     {
@@ -895,20 +895,27 @@ export default function MyPage() {
     },
   ];
 
-  const logout = async() => {
-    deleteCookie('uid');
-    deleteCookie('uname');
-    deleteCookie('uimg');
-    goToLobby();
-  }
+  useEffect(() => {
+    if(status !== 'authenticated') {
+      router.push('/');
+    }
+  }, [status]);
 
   const goToLobby = () => {
     router.push('/');
   };
 
+  const logout = async() => {
+    deleteCookie('uid');
+    deleteCookie('uname');
+    deleteCookie('uimg');
+    signOut();
+    goToLobby();
+  }
+
   return (
     <Layout 
-      header={<Header label="로그아웃" onClickBtn={logout} isSignout />}
+      header={<Header label="로그아웃" onClickBtn={logout} />}
       body={
       <>
         <div className={styles.mainRow}>
@@ -922,11 +929,11 @@ export default function MyPage() {
               </div>
             </div>
             <div className={styles.gameHistoryBody}>
-              {
-                gameHistorys.map(history => 
-                  <GameHistory gameInfo={history} key={history.startAt} />
-                )
-              }
+            {
+              gameHistorys.map(history => 
+                <GameHistory gameInfo={history} key={history.startAt} />
+              )
+            }
             </div>
           </div>
           <div className={styles.mainCol}>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import * as Y from 'yjs';
 import { WebrtcProvider } from 'y-webrtc';
 import {
@@ -23,6 +24,7 @@ import styles from '../../styles/pages/code.module.scss';
 
 export default function Code() {
   const router = useRouter();  
+  const { status } = useSession();
   const gitId = getCookie('uname');
   const [problems, setProblems] = useState({});
   const [playerList, setPlayerList] = useState([]);
@@ -78,18 +80,10 @@ export default function Code() {
   }, []);
 
   useEffect(() => {
-    // if (router.isReady) {
-    //   socket.on('timeOutCode', () => {
-    //     if(router?.query?.mode === 'team') {
-    //       if(router?.query?.roomId === getCookie('uname')) {
-    //         goToResult();
-    //       }
-    //     } else {
-    //       goToResult();
-    //     }
-    //   });
-    // }
-  }, [router.isReady]);
+    if(status === 'unauthenticated') {
+      router.push('/');
+    }
+  }, [status]);
 
   useEffect(() => {
     const submitResult = async() => {
@@ -377,7 +371,7 @@ export default function Code() {
           <div className={styles.selectElem} onClick={() => setSelectedLang('Python')}>Python</div>
           <div className={styles.selectElem} onClick={() => setSelectedLang('JavaScript')}>JavaScript</div>
         </div>
-        <CheckValidUser />
+        {/* <CheckValidUser /> */}
         {/* <CheckValidAccess check={router.query.gameLogId} message="유효하지 않은 게임입니다." /> */}
         </>
       }

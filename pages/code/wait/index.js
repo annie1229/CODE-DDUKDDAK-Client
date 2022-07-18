@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import { getCookie } from 'cookies-next';
 import { socket } from '../../../lib/socket';
 import Layout from '../../../components/layouts/main';
@@ -10,6 +11,7 @@ import CheckValidUser from '../../../components/checkValidUser';
 
 export default function WaitPage() {
   const router = useRouter();
+  const { status } = useSession();
   const defaultUsers = [
     {
       id: 1,
@@ -64,6 +66,12 @@ export default function WaitPage() {
   const [players, setPlayers] = useState(defaultUsers);
   const [countdown, setCountdown] = useState(179);
   const [isMatching, setIsMatching] = useState(false);
+
+  useEffect(() => {
+    if(status === 'unauthenticated') {
+      router.push('/');
+    }
+  }, [status]);
 
   useEffect(() => {
     socket.on('timeLimit', ts => {
@@ -228,7 +236,7 @@ export default function WaitPage() {
             onClickPlayAgain={router?.query?.mode === 'team' ? goToMatch : goToCode}
           />
           <Sidebar />
-          <CheckValidUser />
+          {/* <CheckValidUser /> */}
         </>
       }
     />

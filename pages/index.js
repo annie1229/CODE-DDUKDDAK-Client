@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useSession, signIn, signOut } from "next-auth/react"
+import { useSession, signIn, signOut } from 'next-auth/react';
 import { 
   getCookie, 
   hasCookie
@@ -36,22 +36,22 @@ export default function Home() {
   }, [router.isReady]);
 
   useEffect(() => {
-    if(hasCookie('uid')) {
-      if(isLogin) {
-        // token이 있으면 서버에 유효한 토큰인지 확인하고 true
-        // 유효하지 않으면 false
-        socket.emit('setGitId', getCookie('uname'));
-        socket.on('comeon', id => {
-          setInviteId(id);
-          setIsNoti(true);
-        })
-      }
+    if(status === 'authenticated') {
       setIsLogin(true);
-    } else {
-      // token이 없으면 false
+    } else if(status === 'unauthenticated') {
       setIsLogin(false);
     }
-  }, [isLogin, status]);
+  }, [status]);
+
+  useEffect(() => {
+    if(isLogin) {
+      socket.emit('setGitId', getCookie('uname'));
+      socket.on('comeon', id => {
+        setInviteId(id);
+        setIsNoti(true);
+      });
+    }
+  }, [isLogin]);
 
   const goToWait = (mode) => {
     const query = mode === 'team' ? { mode, roomId: getCookie('uname') } : { mode }

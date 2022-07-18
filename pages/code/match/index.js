@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import { getCookie } from 'cookies-next';
 import { socket } from '../../../lib/socket';
 import Layout from '../../../components/layouts/main';
@@ -10,9 +11,16 @@ import CheckValidUser from '../../../components/checkValidUser';
 
 export default function MatchPage() {
   const router = useRouter();  
+  const { status } = useSession();
   const [gameLogId, setGameLogId] = useState('');
   const [roomId, setRoomId] = useState('');
   const [players, setPlayers] = useState([]);
+
+  useEffect(() => {
+    if(status === 'unauthenticated') {
+      router.push('/');
+    }
+  }, [status]);
 
   useEffect(() => {
     if (router.isReady) {
@@ -104,7 +112,7 @@ export default function MatchPage() {
             onClickPlayAgain={goToCode}
           />
           <Sidebar />
-          <CheckValidUser />
+          {/* <CheckValidUser /> */}
         </>
       }
     />
