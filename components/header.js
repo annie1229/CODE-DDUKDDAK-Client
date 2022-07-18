@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { hasCookie } from 'cookies-next';
 import styles from '../styles/components/header.module.scss';
 
-export default function Header({ label, onClickBtn }) {
+export default function Header({ label, onClickBtn, isSignout=false }) {
   const router = useRouter();
   const { data, status } = useSession();
   const [isLogin, setIsLogin] = useState(false);
@@ -20,6 +20,9 @@ export default function Header({ label, onClickBtn }) {
 
   useEffect(() => {
     console.log('change login status?????????', data, status);
+    if(status === "authenticated") {
+      
+    }
   }, [data, status])
 
   const goToLobby = () => {
@@ -57,16 +60,11 @@ export default function Header({ label, onClickBtn }) {
       {
         // status === "authenticated"
         data
-        ?
-            <>
-              Signed in as {data.user.email} <br />
-              <button onClick={signOut}>Sign out</button>
-            </>
-        :
-          <>
-            Not signed in <br />
-            <button onClick={signIn}>Sign in</button>
-          </>
+        ? <div className={styles.myPageBtn} onClick={isSignout ? signOut : onClickBtn}>{label}</div>
+        : <div className={styles.loginBtn}  onClick={signIn}>
+            <Image src="/github.png" alt="github Logo" width={20} height={20} />
+            <div className={styles.loginText}>로그인</div>
+          </div>
       }
       </div>
     </>

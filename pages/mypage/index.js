@@ -908,7 +908,7 @@ export default function MyPage() {
 
   return (
     <Layout 
-      header={<Header label="로그아웃" onClickBtn={logout} />}
+      header={<Header label="로그아웃" onClickBtn={logout} isSignout />}
       body={
       <>
         <div className={styles.mainRow}>
