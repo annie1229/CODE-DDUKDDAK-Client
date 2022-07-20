@@ -24,9 +24,6 @@ export default function MatchPage() {
 
   useEffect(() => {
     if (router.isReady) {
-      // socket.on('matchingTimer', time => {
-      //   setMatchingTime(time);
-      // });
       if (router.query?.roomId === getCookie('gitId')) {
         socket.emit('startMatching', getCookie('gitId'));
       }
@@ -39,6 +36,11 @@ export default function MatchPage() {
         setRoomId(roomId);
       })
     }
+
+    return () => {
+      socket.off('getTeamInfo');
+      socket.off('teamGameStart');
+    };
   }, [router.isReady]);
 
 
@@ -54,6 +56,10 @@ export default function MatchPage() {
       });
     }
 
+    return () => {
+      socket.off('exitTeamGame');
+      socket.off('exitWait');
+    };
   }, [players]);
 
   useEffect(() => {

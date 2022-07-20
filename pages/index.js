@@ -22,8 +22,26 @@ export default function Home() {
 
 
   useEffect(() => {
-    socket.emit('exitWait', getCookie('gitId'));
-  }, []);
+    // socket.emit('exitWait', getCookie('gitId'));
+    if (router.isReady) {
+      if (router?.query?.mode === 'team') {
+        // 이건 뭐죠...?
+        socket.emit('exitTeamGame', router?.query?.roomId, getCookie('gitId'));
+      } 
+      else {
+        socket.emit('exitWait', getCookie('gitId'));
+      }
+    }
+  }, [router.isReady]);
+
+  // useEffect(() => {
+  //   if(status === 'authenticated' && hasCookie('gitId')) {
+  //     console.log('has cookie??????', hasCookie('gitId'));
+  //     setIsLogin(true);
+  //   } else if(status === 'unauthenticated') {
+  //     setIsLogin(false);
+  //   }
+  // }, [status]);
 
   useEffect(() => {
     if(isLogin) {
@@ -34,6 +52,10 @@ export default function Home() {
         setIsNoti(true);
       });
     }
+
+    return () => {
+      socket.off('comeon');
+    };
   }, [isLogin]);
 
   const goToWait = (mode) => {
