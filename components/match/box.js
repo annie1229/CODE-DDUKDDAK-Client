@@ -6,14 +6,11 @@ import styles from '../../styles/components/match.module.scss';
 
 export default function MatchBox({ players, onClickGoToMain }) {
   const router = useRouter();
-  const [countdown, setCountdown] = useState(180);
+  const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCountdown(prev => {
-        if(0 < prev) return prev - 1;
-        else return prev;
-      });
+      setCountdown(prev => prev + 1);
     }, 1000);
 
     return () => {
