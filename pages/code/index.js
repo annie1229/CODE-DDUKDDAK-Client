@@ -7,7 +7,6 @@ import { WebrtcProvider } from 'y-webrtc';
 import { ReflexContainer, ReflexSplitter, ReflexElement } from 'react-reflex';
 import { getCookie } from 'cookies-next';
 import { useBeforeunload } from 'react-beforeunload';
-// import { useBeforeUnload } from 'react-use';
 import { socket } from '../../lib/socket';
 const Voice = dynamic(() => import('../../lib/peer'));
 import Layout from '../../components/layouts/main';
@@ -92,31 +91,6 @@ export default function Code() {
   }, [status]);
 
   useEffect(() => {
-    const submitResult = async() => {
-      if (router?.query?.mode === 'team'){
-        await submitCodeTeam();
-        socket.emit('submitCodeTeam', router?.query?.gameLogId, router?.query?.roomId);
-      }
-      else {
-        await submitCode();
-        socket.emit('submitCode', router?.query?.gameLogId);
-      };
-      router.replace({
-        pathname: '/code/result',
-        query: { 
-          gameLogId: router?.query?.gameLogId,
-          mode: router?.query?.mode 
-        }
-      });
-    };
-
-    if(isSubmit) {
-      submitResult();
-      // setIsSubmit(false);
-    }
-  }, [isSubmit]);
-
-  useEffect(() => {
     if(router.isReady) {
       if(router?.query?.gameLogId && router.query.gameLogId !== '') {
         getProblem();
@@ -155,6 +129,31 @@ export default function Code() {
     }
   }, [countdown, router.isReady]);
   
+  useEffect(() => {
+    const submitResult = async() => {
+      if (router?.query?.mode === 'team'){
+        await submitCodeTeam();
+        socket.emit('submitCodeTeam', router?.query?.gameLogId, router?.query?.roomId);
+      }
+      else {
+        await submitCode();
+        socket.emit('submitCode', router?.query?.gameLogId);
+      };
+      router.replace({
+        pathname: '/code/result',
+        query: { 
+          gameLogId: router?.query?.gameLogId,
+          mode: router?.query?.mode 
+        }
+      });
+    };
+
+    if(isSubmit) {
+      submitResult();
+      // setIsSubmit(false);
+    }
+  }, [isSubmit]);
+
   useEffect(() => {
     onChangeLang(selectedLang);
     setIsSelectOpen(false);
@@ -198,6 +197,17 @@ export default function Code() {
     return false;
   };
   
+  const checkValidUser = (userList) => {
+    for(let user of userList) {
+      if(user.gitId === gitId) {
+        if(0 <= user.passRate) {
+          alert('이미 완료된 게임입니다!');
+          router.replace('/');
+        }
+      }
+    }
+  };
+
   const getProblem = async() => {
     await fetch(`/server/api/gamelog/getGameLog`, {
       method: 'POST',
@@ -215,12 +225,15 @@ export default function Code() {
         setProblems(data.info.problemId);
         if(router?.query?.mode === 'team') {
           if(checkMyTeam(data.info.teamA)) {
+            checkValidUser(data.info.teamA);
             setMyTeam(data.info.teamA);
           } else {
+            checkValidUser(data.info.teamB);
             setMyTeam(data.info.teamB);
           }
           setPlayerList([data.info.teamA, data.info.teamB]);
         } else {
+          checkValidUser(data.info.userHistory);
           setPlayerList(data.info.userHistory);
         }
       }
