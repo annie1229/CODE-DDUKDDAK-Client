@@ -4,7 +4,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { deleteCookie } from 'cookies-next';
 import Layout from '../../components/layouts/main';
 import Header from '../../components/header';
-import MyInfoBox from '../../components/mypage/myInfo';
+import { MyInfoBox } from '../../components/mypage/myInfo';
 import RankingBox from '../../components/mypage/ranking';
 import GameHistory from '../../components/mypage/gameHistory';
 import Loading from '../../components/loading';
@@ -85,7 +85,7 @@ export default function MyPage() {
           <div className={styles.mainBox}>
             <div className={styles.mainCol}>
               <MyInfoBox myInfo={myInfo} ranking={ranking} />
-              <RankingBox ranking={ranking}/>
+              <RankingBox ranking={ranking} myInfo={myInfo}/>
             </div>
             <GameHistory gameLogs={gameLogs} ranking={ranking} myInfo={myInfo} />
           </div>
