@@ -10,6 +10,8 @@
 👨‍💻[정의성](https://github.com/EilLagerTodd)
 👩‍💻[이혜진](https://github.com/annie1229)
 
+[팀 Github Organization](https://github.com/awayfromkeyboard7)<br/>
+
 배포 사이트 : [{ CODE: '뚝딱' }](https://bluefrog-six.vercel.app/)<br/>
 발표 영상 : [발표 영상](https://youtu.be/B_xjtqqtH-E)
 
